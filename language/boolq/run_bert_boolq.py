@@ -28,6 +28,7 @@ from bert import tokenization
 import numpy as np
 import tensorflow as tf
 
+from copy import deepcopy
 from typing import List
 
 flags = tf.flags
@@ -196,7 +197,7 @@ def get_test() -> List[BoolQExample]:
     return _create_examples(FLAGS.boolq_test_data_path, "test")
 
 
-def convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer):
+def convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer) -> InputFeatures:
     """Converts a single `InputExample` into a single `InputFeatures`."""
     label_map = {}
     for (i, label) in enumerate(label_list):
@@ -271,12 +272,15 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     label_id = label_map[example.label]
     if ex_index < 5:
         tf.logging.info("*** Example ***")
+        # todo データを一意に特定するオブジェクト
         tf.logging.info("guid: %s" % (example.guid))
+        # todo tokenを保持しているオブジェクト
         tf.logging.info("tokens: %s" % " ".join(
                 [tokenization.printable_text(x) for x in tokens]))
         tf.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
         tf.logging.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
         tf.logging.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
+        # todo noがid=1, yesがid=0
         tf.logging.info("label: %s (id = %d)" % (example.label, label_id))
 
     feature = InputFeatures(
@@ -287,8 +291,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     return feature
 
 
-def file_based_convert_examples_to_features(
-        examples, label_list, max_seq_length, tokenizer, output_file):
+def file_based_convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, output_file) -> None:
     """Convert a set of `InputExample`s to a TFRecord file."""
     # todo TR record? Tensorfrlow record?
 
@@ -674,6 +677,7 @@ def main(_):
                 drop_remainder=True)
         estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
 
+    # load data from saved object on a disk.
     eval_on = []
     if FLAGS.do_eval_dev:
         eval_on.append((get_dev(), "dev"))
@@ -684,8 +688,7 @@ def main(_):
         # type: List[BoolQExample], str
         eval_file = os.path.join(FLAGS.output_dir, "%s.tf_record" % name)
         # todo tensorflowのシステムオブジェクトに数値化したデータを送る役割
-        file_based_convert_examples_to_features(
-                eval_examples, label_list, FLAGS.max_seq_length, tokenizer, eval_file)
+        file_based_convert_examples_to_features(eval_examples, label_list, FLAGS.max_seq_length, tokenizer, eval_file)
 
         tf.logging.info("***** Running %s *****" % name)
         tf.logging.info("    Num examples = %d", len(eval_examples))
@@ -726,8 +729,31 @@ def main(_):
             result = estimator.predict(input_fn=eval_input_fn)
             # todo たぶん，[True, False]確率を返している．でも，どっちがTrue, False?
             validation_predictions = np.array([item for item in result])
+
+            output_results = []
+            boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
+            for prediction_array, boolq_obj in zip(eval_examples, result):
+                # type: np.ndarray, BoolQExample
+                # 数値が大きいindexがモデルの予測結果
+                index_prediction = np.argsort(validation_predictions)[1]
+                bool_prediction = True if index_prediction == 0 else False
+                __boolq_prediction_obj = deepcopy(boolq_prediction_obj)
+                __boolq_prediction_obj['id'] = boolq_obj.guid
+                __boolq_prediction_obj['token'] = boolq_obj.text_b
+                __boolq_prediction_obj['prediction'] = bool_prediction
+                __boolq_prediction_obj['gold'] = boolq_obj.label
+                __boolq_prediction_obj['probability'] = list(prediction_array)
+                output_results.append(__boolq_prediction_obj)
+
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
-            np.savetxt(output_eval_file, validation_predictions, delimiter=',')
+            import codecs
+            import json
+            with codecs.open(output_eval_file, 'w', 'utf-8') as f:
+                f.write(json.dumps(output_eval_file))
+
+            #output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
+            #np.savetxt(output_eval_file, validation_predictions, delimiter=',')
+
             #with tf.gfile.GFile(output_eval_file, "w") as writer:
             #    tf.logging.info("***** %s prediction results *****" % name)
 
