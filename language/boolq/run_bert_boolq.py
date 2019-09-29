@@ -427,9 +427,14 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
         return (loss, per_example_loss, logits, probabilities)
 
 
-def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
-                                         num_train_steps, num_warmup_steps, use_tpu,
-                                         use_one_hot_embeddings):
+def model_fn_builder(bert_config,
+                     num_labels,
+                     init_checkpoint,
+                     learning_rate,
+                     num_train_steps,
+                     num_warmup_steps,
+                     use_tpu,
+                     use_one_hot_embeddings) -> tf.contrib.tpu.TPUEstimatorSpec:
     """Returns `model_fn` closure for TPUEstimator."""
 
     def model_fn(features, labels, mode, params):    # pylint: disable=unused-argument
@@ -477,6 +482,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
                                             init_string)
 
         output_spec = None
+        # TODO ３種類のモードが設定されている https://www.tensorflow.org/api_docs/python/tf/estimator/ModeKeys
         if mode == tf.estimator.ModeKeys.TRAIN:
 
             train_op = optimization.create_optimizer(
@@ -503,7 +509,8 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
                     mode=mode,
                     loss=total_loss,
                     eval_metrics=eval_metrics,
-                    scaffold_fn=scaffold_fn)
+                    scaffold_fn=scaffold_fn
+            )
         else:
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                     mode=mode, predictions=probabilities, scaffold_fn=scaffold_fn)
@@ -642,10 +649,10 @@ def main(_):
             num_train_steps=num_train_steps,
             num_warmup_steps=num_warmup_steps,
             use_tpu=FLAGS.use_tpu,
-            use_one_hot_embeddings=FLAGS.use_tpu)
+            use_one_hot_embeddings=FLAGS.use_tpu)  # type: tf.contrib.tpu.TPUEstimatorSpec
 
     # If TPU is not available, this will fall back to normal Estimator on CPU or GPU.
-    # todo    https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimator
+    # todo https://www.tensorflow.org/versions/r1.14/api_docs/python/tf/estimator/tpu/TPUEstimator
     estimator = tf.contrib.tpu.TPUEstimator(
             use_tpu=FLAGS.use_tpu,
             model_fn=model_fn,
@@ -705,15 +712,27 @@ def main(_):
         # todo tf.contrib.tpu.TPUEstimatorにevaluateタスクを送る
         # todo resultには何が戻ってくるのだろうか？
         # todo 評価結果そのものを返すには？
-        result = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
+        if FLAGS.do_eval_dev:
+            result = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
 
-        output_eval_file = os.path.join(FLAGS.output_dir,
-                                                                        "%s_eval_results.txt" % name)
-        with tf.gfile.GFile(output_eval_file, "w") as writer:
-            tf.logging.info("***** %s eval results *****" % name)
-            for key in sorted(result.keys()):
-                tf.logging.info("    %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
+            output_eval_file = os.path.join(FLAGS.output_dir, "%s_eval_results.txt" % name)
+            with tf.gfile.GFile(output_eval_file, "w") as writer:
+                tf.logging.info("***** %s eval results *****" % name)
+                for key in sorted(result.keys()):
+                    tf.logging.info("    %s = %s", key, str(result[key]))
+                    writer.write("%s = %s\n" % (key, str(result[key])))
+
+            # todo predictをあとで書き足す？
+
+        elif FLAGS.do_eval_test:
+            result = estimator.predict(input_fn=eval_input_fn, steps=eval_steps)
+            validation_predictions = np.array([item['predictions'][0] for item in result])
+            output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
+            with tf.gfile.GFile(output_eval_file, "w") as writer:
+                tf.logging.info("***** %s prediction results *****" % name)
+                print(validation_predictions)
+                print(type(validation_predictions))
+                # todo テキストファイルに書き出しできるようにする
 
 
 if __name__ == "__main__":
