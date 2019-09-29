@@ -272,15 +272,15 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     label_id = label_map[example.label]
     if ex_index < 5:
         tf.logging.info("*** Example ***")
-        # todo データを一意に特定するオブジェクト
+        # データを一意に特定するオブジェクト
         tf.logging.info("guid: %s" % (example.guid))
-        # todo tokenを保持しているオブジェクト
+        # tokenを保持しているオブジェクト
         tf.logging.info("tokens: %s" % " ".join(
                 [tokenization.printable_text(x) for x in tokens]))
         tf.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
         tf.logging.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
         tf.logging.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
-        # todo noがid=1, yesがid=0
+        # noがid=1, yesがid=0
         tf.logging.info("label: %s (id = %d)" % (example.label, label_id))
 
     feature = InputFeatures(
@@ -743,7 +743,7 @@ def main(_):
                 __boolq_prediction_obj['token'] = boolq_obj.text_b
                 __boolq_prediction_obj['prediction'] = bool_prediction
                 __boolq_prediction_obj['gold'] = boolq_obj.label
-                __boolq_prediction_obj['probability'] = list(prediction_array)
+                __boolq_prediction_obj['probability'] = [float(prob) for prob in list(prediction_array)]
                 output_results.append(__boolq_prediction_obj)
 
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.json" % name)
