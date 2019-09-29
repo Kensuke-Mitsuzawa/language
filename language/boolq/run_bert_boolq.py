@@ -726,17 +726,12 @@ def main(_):
 
         elif FLAGS.do_eval_test:
             result = estimator.predict(input_fn=eval_input_fn)
-            print(result)
-            print(type(result))
-            validation_predictions = [item for item in result]
-            print(validation_predictions)
-            validation_predictions = np.array([item['predictions'][0] for item in result])
+            # todo たぶん，[True, False]確率を返している．でも，どっちがTrue, False?
+            validation_predictions = np.array([item for item in result])
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
-            with tf.gfile.GFile(output_eval_file, "w") as writer:
-                tf.logging.info("***** %s prediction results *****" % name)
-                print(validation_predictions)
-                print(type(validation_predictions))
-                # todo テキストファイルに書き出しできるようにする
+            np.savetxt(output_eval_file, validation_predictions, delimiter=',')
+            #with tf.gfile.GFile(output_eval_file, "w") as writer:
+            #    tf.logging.info("***** %s prediction results *****" % name)
 
 
 if __name__ == "__main__":
