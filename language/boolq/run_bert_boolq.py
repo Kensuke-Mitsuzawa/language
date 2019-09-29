@@ -196,8 +196,7 @@ def get_test() -> List[BoolQExample]:
     return _create_examples(FLAGS.boolq_test_data_path, "test")
 
 
-def convert_single_example(ex_index, example, label_list, max_seq_length,
-                                                     tokenizer):
+def convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer):
     """Converts a single `InputExample` into a single `InputFeatures`."""
     label_map = {}
     for (i, label) in enumerate(label_list):
@@ -299,8 +298,7 @@ def file_based_convert_examples_to_features(
         if ex_index % 10000 == 0:
             tf.logging.info("Writing example %d of %d" % (ex_index, len(examples)))
 
-        feature = convert_single_example(ex_index, example, label_list,
-                                                                         max_seq_length, tokenizer)
+        feature = convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer)
 
         def create_int_feature(values):
             f = tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
@@ -592,7 +590,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.ERROR)
+    tf.logging.set_verbosity(tf.logging.INFO)
 
     if not FLAGS.do_train and not FLAGS.do_eval_dev and not FLAGS.do_eval_test:
         raise ValueError(
