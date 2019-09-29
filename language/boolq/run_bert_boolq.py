@@ -730,6 +730,8 @@ def main(_):
 
             output_results = []
             boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
+            print(len(eval_examples))
+            print(len(validation_predictions))
             for boolq_obj, prediction_array in zip(eval_examples, validation_predictions):
                 print(boolq_obj, prediction_array)
                 # type: np.ndarray, BoolQExample
