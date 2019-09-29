@@ -726,6 +726,7 @@ def main(_):
 
         elif FLAGS.do_eval_test:
             result = estimator.predict(input_fn=eval_input_fn)
+            print(result)
             validation_predictions = np.array([item['predictions'][0] for item in result])
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
             with tf.gfile.GFile(output_eval_file, "w") as writer:
