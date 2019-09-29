@@ -726,7 +726,7 @@ def main(_):
 
         elif FLAGS.do_eval_test:
             result = estimator.predict(input_fn=eval_input_fn)
-            validation_predictions = [item['predictions'][0] for item in result]
+            validation_predictions = [item['predictions'] for item in result]
             print(validation_predictions)
             validation_predictions = np.array([item['predictions'][0] for item in result])
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
