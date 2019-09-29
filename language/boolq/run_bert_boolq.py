@@ -30,6 +30,8 @@ import tensorflow as tf
 
 from copy import deepcopy
 from typing import List
+import codecs
+import json
 
 flags = tf.flags
 
@@ -592,6 +594,35 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
     return features
 
 
+def write_prediction_result(name: str, eval_examples: List[BoolQExample], validation_predictions: np.ndarray) -> None:
+    """予測結果をjsonファイルとして書き出す
+
+    :param name: 保存時のprefix名
+    :param eval_examples: BoolQオブジェクト
+    :param validation_predictions: [True確率, False確率]のarray
+    :return: None
+    """
+    output_results = []
+    boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
+    for boolq_obj, prediction_array in zip(eval_examples, validation_predictions):
+        print(boolq_obj, prediction_array)
+        # type: np.ndarray, BoolQExample
+        # 数値が大きいindexがモデルの予測結果
+        index_prediction = np.argsort(prediction_array)[1]
+        bool_prediction = True if index_prediction == 0 else False
+        __boolq_prediction_obj = deepcopy(boolq_prediction_obj)
+        __boolq_prediction_obj['id'] = boolq_obj.guid
+        __boolq_prediction_obj['token'] = boolq_obj.text_b
+        __boolq_prediction_obj['prediction'] = bool_prediction
+        __boolq_prediction_obj['gold'] = boolq_obj.label
+        __boolq_prediction_obj['probability'] = [float(prob) for prob in list(prediction_array)]
+        output_results.append(__boolq_prediction_obj)
+
+    output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.json" % name)
+    with codecs.open(output_eval_file, 'w', 'utf-8') as f:
+        f.write(json.dumps(output_results))
+
+
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -727,36 +758,7 @@ def main(_):
             result = estimator.predict(input_fn=eval_input_fn)
             # [True, False]確率を返している．0: True, 1: False
             validation_predictions = np.array([item for item in result])
-
-            output_results = []
-            boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
-            print(len(eval_examples))
-            print(len(validation_predictions))
-            for boolq_obj, prediction_array in zip(eval_examples, validation_predictions):
-                print(boolq_obj, prediction_array)
-                # type: np.ndarray, BoolQExample
-                # 数値が大きいindexがモデルの予測結果
-                index_prediction = np.argsort(prediction_array)[1]
-                bool_prediction = True if index_prediction == 0 else False
-                __boolq_prediction_obj = deepcopy(boolq_prediction_obj)
-                __boolq_prediction_obj['id'] = boolq_obj.guid
-                __boolq_prediction_obj['token'] = boolq_obj.text_b
-                __boolq_prediction_obj['prediction'] = bool_prediction
-                __boolq_prediction_obj['gold'] = boolq_obj.label
-                __boolq_prediction_obj['probability'] = [float(prob) for prob in list(prediction_array)]
-                output_results.append(__boolq_prediction_obj)
-
-            output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.json" % name)
-            import codecs
-            import json
-            with codecs.open(output_eval_file, 'w', 'utf-8') as f:
-                f.write(json.dumps(output_results))
-
-            #output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
-            #np.savetxt(output_eval_file, validation_predictions, delimiter=',')
-
-            #with tf.gfile.GFile(output_eval_file, "w") as writer:
-            #    tf.logging.info("***** %s prediction results *****" % name)
+            write_prediction_result(name, eval_examples, validation_predictions)
 
 
 if __name__ == "__main__":
