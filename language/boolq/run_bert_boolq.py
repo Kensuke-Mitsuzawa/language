@@ -725,7 +725,7 @@ def main(_):
             # todo predictをあとで書き足す？
 
         elif FLAGS.do_eval_test:
-            result = estimator.predict(input_fn=eval_input_fn, steps=eval_steps)
+            result = estimator.predict(input_fn=eval_input_fn)
             validation_predictions = np.array([item['predictions'][0] for item in result])
             output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
             with tf.gfile.GFile(output_eval_file, "w") as writer:
