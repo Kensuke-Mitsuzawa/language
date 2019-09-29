@@ -726,6 +726,8 @@ def main(_):
 
         elif FLAGS.do_eval_test:
             result = estimator.predict(input_fn=eval_input_fn)
+            print(result)
+            print(type(result))
             validation_predictions = [item for item in result]
             print(validation_predictions)
             validation_predictions = np.array([item['predictions'][0] for item in result])
