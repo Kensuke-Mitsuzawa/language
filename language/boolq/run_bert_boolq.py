@@ -653,7 +653,7 @@ def main(_):
             use_one_hot_embeddings=FLAGS.use_tpu)  # type: tf.contrib.tpu.TPUEstimatorSpec
 
     # If TPU is not available, this will fall back to normal Estimator on CPU or GPU.
-    # todo https://www.tensorflow.org/versions/r1.14/api_docs/python/tf/estimator/tpu/TPUEstimator
+    # https://www.tensorflow.org/versions/r1.14/api_docs/python/tf/estimator/tpu/TPUEstimator
     estimator = tf.contrib.tpu.TPUEstimator(
             use_tpu=FLAGS.use_tpu,
             model_fn=model_fn,
@@ -687,7 +687,7 @@ def main(_):
     for eval_examples, name in eval_on:
         # type: List[BoolQExample], str
         eval_file = os.path.join(FLAGS.output_dir, "%s.tf_record" % name)
-        # todo tensorflowのシステムオブジェクトに数値化したデータを送る役割
+        # tensorflowのシステムオブジェクトに数値化したデータを送る役割
         file_based_convert_examples_to_features(eval_examples, label_list, FLAGS.max_seq_length, tokenizer, eval_file)
 
         tf.logging.info("***** Running %s *****" % name)
@@ -704,15 +704,13 @@ def main(_):
             eval_steps = int(len(eval_examples) / FLAGS.eval_batch_size)
 
         eval_drop_remainder = True if FLAGS.use_tpu else False
-        # todo eval_input_fnはclosure objectである
+        # eval_input_fnはclosure objectである
         eval_input_fn = file_based_input_fn_builder(
                 input_file=eval_file,
                 seq_length=FLAGS.max_seq_length,
                 is_training=False,
                 drop_remainder=eval_drop_remainder)
-        # todo tf.contrib.tpu.TPUEstimatorにevaluateタスクを送る
-        # todo resultには何が戻ってくるのだろうか？
-        # todo 評価結果そのものを返すには？
+        # tf.contrib.tpu.TPUEstimatorにevaluateタスクを送る
         if FLAGS.do_eval_dev:
             result = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
 
@@ -727,7 +725,7 @@ def main(_):
 
         elif FLAGS.do_eval_test:
             result = estimator.predict(input_fn=eval_input_fn)
-            # todo たぶん，[True, False]確率を返している．でも，どっちがTrue, False?
+            # [True, False]確率を返している．0: True, 1: False
             validation_predictions = np.array([item for item in result])
 
             output_results = []
@@ -749,7 +747,7 @@ def main(_):
             import codecs
             import json
             with codecs.open(output_eval_file, 'w', 'utf-8') as f:
-                f.write(json.dumps(output_eval_file))
+                f.write(json.dumps(output_results))
 
             #output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
             #np.savetxt(output_eval_file, validation_predictions, delimiter=',')
