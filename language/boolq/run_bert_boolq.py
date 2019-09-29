@@ -730,7 +730,7 @@ def main(_):
 
             output_results = []
             boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
-            for prediction_array, boolq_obj in zip(eval_examples, result):
+            for boolq_obj, prediction_array in zip(eval_examples, result):
                 # type: np.ndarray, BoolQExample
                 # 数値が大きいindexがモデルの予測結果
                 index_prediction = np.argsort(validation_predictions)[1]
@@ -743,7 +743,7 @@ def main(_):
                 __boolq_prediction_obj['probability'] = list(prediction_array)
                 output_results.append(__boolq_prediction_obj)
 
-            output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.txt" % name)
+            output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.json" % name)
             import codecs
             import json
             with codecs.open(output_eval_file, 'w', 'utf-8') as f:
