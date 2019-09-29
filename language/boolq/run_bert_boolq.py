@@ -730,10 +730,10 @@ def main(_):
 
             output_results = []
             boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
-            for boolq_obj, prediction_array in zip(eval_examples, result):
+            for boolq_obj, prediction_array in zip(eval_examples, validation_predictions):
                 # type: np.ndarray, BoolQExample
                 # 数値が大きいindexがモデルの予測結果
-                index_prediction = np.argsort(validation_predictions)[1]
+                index_prediction = np.argsort(prediction_array)[1]
                 bool_prediction = True if index_prediction == 0 else False
                 __boolq_prediction_obj = deepcopy(boolq_prediction_obj)
                 __boolq_prediction_obj['id'] = boolq_obj.guid
