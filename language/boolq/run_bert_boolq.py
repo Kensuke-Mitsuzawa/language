@@ -592,7 +592,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.set_verbosity(tf.logging.ERROR)
 
     if not FLAGS.do_train and not FLAGS.do_eval_dev and not FLAGS.do_eval_test:
         raise ValueError(
