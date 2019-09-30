@@ -32,6 +32,7 @@ from copy import deepcopy
 from typing import List
 import codecs
 import json
+import csv
 
 flags = tf.flags
 
@@ -603,9 +604,9 @@ def write_prediction_result(name: str, eval_examples: List[BoolQExample], valida
     :return: None
     """
     output_results = []
+    csv_outout_result = [['id', 'prediction', 'gold']]
     boolq_prediction_obj = {"id": 0, "token": [], "prediction": None, "gold": None, "probability": []}
     for boolq_obj, prediction_array in zip(eval_examples, validation_predictions):
-        print(boolq_obj, prediction_array)
         # type: np.ndarray, BoolQExample
         # 数値が大きいindexがモデルの予測結果
         index_prediction = np.argsort(prediction_array)[1]
@@ -617,10 +618,18 @@ def write_prediction_result(name: str, eval_examples: List[BoolQExample], valida
         __boolq_prediction_obj['gold'] = boolq_obj.label
         __boolq_prediction_obj['probability'] = [float(prob) for prob in list(prediction_array)]
         output_results.append(__boolq_prediction_obj)
+        csv_outout_result.append([boolq_obj.guid, bool_prediction, boolq_obj.label])
 
     output_eval_file = os.path.join(FLAGS.output_dir, "%s_predict.json" % name)
     with codecs.open(output_eval_file, 'w', 'utf-8') as f:
         f.write(json.dumps(output_results))
+    tf.logging.info(f"Prediction json file at {output_eval_file}")
+
+    output_eval_file_csv = os.path.join(FLAGS.output_dir, "%s_predict.csv" % name)
+    with open(output_eval_file_csv, 'w') as writeFile:
+        writer = csv.writer(writeFile)
+        writer.writerows(csv_outout_result)
+    tf.logging.info(f"Prediction csv file at {output_eval_file_csv}")
 
 
 def main(_):
