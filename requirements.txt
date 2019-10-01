@@ -2,3 +2,5 @@ tensorflow_estimator==1.13.0
 bert-tensorflow
 tensorflow
 numpy
+scikit-learn
+jsonlines

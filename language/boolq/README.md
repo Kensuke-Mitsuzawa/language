@@ -72,3 +72,31 @@ It defaults to the hyper-parameters we used to get our BoolQ results.
 To reproduce the best results with BERT pre-trained on MultiNLI, the
 `init_checkpoint` flag should point to a MultiNLI checkpoint trained with the
 original BERT codebase (https://github.com/google-research/bert).
+
+# 加筆 Readme
+
+このコードは実装されたboolqのコードを追試するために改造されたコードである．
+
+## 論文環境の追試
+
+このコードで実験追試するための手順は以下の通り．
+
+1. 必要なデータセットをダウンロードする．
+    - BoolQデータセット
+    - MultiNLIデータセット. MultiNLIは`convert_multinli_to_boolq.py`でデータセット構造変換をする．
+    - 訓練済みBert [Githubページ](https://github.com/google-research/bert#pre-trained-models)
+2. 訓練済みBert + MultiNLIでモデルpre-training
+3. 2.のtrain pre-trained model on BoolQデータセット
+4. check performance score (`eval_prediction.py`)
+
+### ラベル予測結果の出力
+
+```bash
+python run_bert_boolq.py \ 
+--vocab_file datasets/cased_L-12_H-768_A-12/vocab.txt \ 
+--bert_config_file datasets/cased_L-12_H-768_A-12/bert_config.json \
+--init_checkpoint datasets/boolq_test_model/model.ckpt-1178 \
+--boolq_test_data_path datasets/boolean-questions/train.jsonl \
+--do_eval_test \
+--output_dir boolq_eval_result
+```
