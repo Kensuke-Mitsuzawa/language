@@ -89,14 +89,4 @@ original BERT codebase (https://github.com/google-research/bert).
 3. 2.のtrain pre-trained model on BoolQデータセット
 4. check performance score (`eval_prediction.py`)
 
-### ラベル予測結果の出力
-
-```bash
-python run_bert_boolq.py \ 
---vocab_file datasets/cased_L-12_H-768_A-12/vocab.txt \ 
---bert_config_file datasets/cased_L-12_H-768_A-12/bert_config.json \
---init_checkpoint datasets/boolq_test_model/model.ckpt-1178 \
---boolq_test_data_path datasets/boolean-questions/train.jsonl \
---do_eval_test \
---output_dir boolq_eval_result
-```
+詳細はドキュメント参照 on [GoogleDrive](https://docs.google.com/document/d/11ye-p728rT-d_3nbjLb_C0ssVLJ5BLCHcZpJOVN38rE/edit#heading=h.1xqu3oybaepl)
