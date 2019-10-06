@@ -37,13 +37,18 @@ def main(path_prediction_csv: str,
     csvfile.close()
 
     dict_evaluation_sum = dict(Counter(__stack))
-    precision = dict_evaluation_sum['tp'] / (dict_evaluation_sum['tp'] + dict_evaluation_sum['fp'])
-    recall = dict_evaluation_sum['tp'] / (dict_evaluation_sum['tp'] + dict_evaluation_sum['fn'])
+    tp = dict_evaluation_sum['tp'] if 'tp' in dict_evaluation_sum else 0
+    fp = dict_evaluation_sum['fp'] if 'fp' in dict_evaluation_sum else 0
+    fn = dict_evaluation_sum['fn'] if 'fn' in dict_evaluation_sum else 0
+    tn = dict_evaluation_sum['tn'] if 'tn' in dict_evaluation_sum else 0
+
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
     f = (2 * precision * recall) / (precision + recall)
 
-    print(f"tp: {dict_evaluation_sum['tp']}, fp: {dict_evaluation_sum['fp']}, fn: {dict_evaluation_sum['fn']}, tn: {dict_evaluation_sum['tn']}")
-    print(f'precision: {precision} = {dict_evaluation_sum["tp"]} / ({dict_evaluation_sum["tp"]} + {dict_evaluation_sum["fp"]})')
-    print(f'recall: {recall} = {dict_evaluation_sum["tp"]} / ({dict_evaluation_sum["tp"]} + {dict_evaluation_sum["fn"]})')
+    print(f"tp: {tp}, fp: {fp}, fn: {fn}, tn: {tn}")
+    print(f'precision: {precision} = {tp} / ({tp} + {fp})')
+    print(f'recall: {recall} = {tp} / ({tp} + {fn})')
     print(f'f: {f} = (2 * {precision} * {recall}) / ({precision} + {recall})')
 
 
